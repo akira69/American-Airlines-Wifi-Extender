@@ -33,7 +33,7 @@
 		2BCF967A2F73390D00DCDD2D /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "Contents​/​Library​/​Launch​Daemons";
+			dstPath = "Contents/Library/LaunchDaemons";
 			dstSubfolderSpec = 1;
 			files = (
 			);
