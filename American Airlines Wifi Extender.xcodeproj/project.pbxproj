@@ -6,11 +6,29 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXCopyFilesBuildPhase section */
+		2B01BDA42F6DA04700067DE9 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		2B01BDA62F6DA04700067DE9 /* WifiUtilityHelper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = WifiUtilityHelper; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B4A234D2F6D8FBF00B3A320 /* American Airlines Wifi Extender.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "American Airlines Wifi Extender.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		2B01BDA72F6DA04700067DE9 /* WifiUtilityHelper */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = WifiUtilityHelper;
+			sourceTree = "<group>";
+		};
 		2B4A234F2F6D8FBF00B3A320 /* American Airlines Wifi Extender */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "American Airlines Wifi Extender";
@@ -19,6 +37,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		2B01BDA32F6DA04700067DE9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2B4A234A2F6D8FBF00B3A320 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -33,6 +58,7 @@
 			isa = PBXGroup;
 			children = (
 				2B4A234F2F6D8FBF00B3A320 /* American Airlines Wifi Extender */,
+				2B01BDA72F6DA04700067DE9 /* WifiUtilityHelper */,
 				2B4A234E2F6D8FBF00B3A320 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +67,7 @@
 			isa = PBXGroup;
 			children = (
 				2B4A234D2F6D8FBF00B3A320 /* American Airlines Wifi Extender.app */,
+				2B01BDA62F6DA04700067DE9 /* WifiUtilityHelper */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +75,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		2B01BDA52F6DA04700067DE9 /* WifiUtilityHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2B01BDAC2F6DA04700067DE9 /* Build configuration list for PBXNativeTarget "WifiUtilityHelper" */;
+			buildPhases = (
+				2B01BDA22F6DA04700067DE9 /* Sources */,
+				2B01BDA32F6DA04700067DE9 /* Frameworks */,
+				2B01BDA42F6DA04700067DE9 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				2B01BDA72F6DA04700067DE9 /* WifiUtilityHelper */,
+			);
+			name = WifiUtilityHelper;
+			packageProductDependencies = (
+			);
+			productName = WifiUtilityHelper;
+			productReference = 2B01BDA62F6DA04700067DE9 /* WifiUtilityHelper */;
+			productType = "com.apple.product-type.tool";
+		};
 		2B4A234C2F6D8FBF00B3A320 /* American Airlines Wifi Extender */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2B4A23582F6D8FC000B3A320 /* Build configuration list for PBXNativeTarget "American Airlines Wifi Extender" */;
@@ -80,6 +129,9 @@
 				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2630;
 				TargetAttributes = {
+					2B01BDA52F6DA04700067DE9 = {
+						CreatedOnToolsVersion = 26.3;
+					};
 					2B4A234C2F6D8FBF00B3A320 = {
 						CreatedOnToolsVersion = 26.3;
 					};
@@ -100,6 +152,7 @@
 			projectRoot = "";
 			targets = (
 				2B4A234C2F6D8FBF00B3A320 /* American Airlines Wifi Extender */,
+				2B01BDA52F6DA04700067DE9 /* WifiUtilityHelper */,
 			);
 		};
 /* End PBXProject section */
@@ -115,6 +168,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		2B01BDA22F6DA04700067DE9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2B4A23492F6D8FBF00B3A320 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -125,6 +185,32 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		2B01BDAA2F6DA04700067DE9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		2B01BDAB2F6DA04700067DE9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		2B4A23562F6D8FC000B3A320 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -326,6 +412,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2B01BDAC2F6DA04700067DE9 /* Build configuration list for PBXNativeTarget "WifiUtilityHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2B01BDAA2F6DA04700067DE9 /* Debug */,
+				2B01BDAB2F6DA04700067DE9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		2B4A23482F6D8FBF00B3A320 /* Build configuration list for PBXProject "American Airlines Wifi Extender" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
