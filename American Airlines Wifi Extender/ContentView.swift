@@ -239,14 +239,14 @@ struct ContentView: View {
 
         Task { @MainActor in
             do {
-                try BlessedHelperClient.shared.blessIfNeeded()
+                try BlessedHelperClient.shared.registerIfNeeded()
                 BlessedHelperClient.shared.runCommand(cmd) { output in
                     DispatchQueue.main.async {
                         self.commandOutput = output
                     }
                 }
             } catch {
-                self.commandOutput = "Bless failed: \(error.localizedDescription)"
+                self.commandOutput = "Helper registration failed: \(error.localizedDescription)"
             }
         }
     }

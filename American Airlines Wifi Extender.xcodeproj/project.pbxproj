@@ -6,6 +6,20 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2BCF967E2F73393C00DCDD2D /* WifiUtilityHelper in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2B01BDA62F6DA04700067DE9 /* WifiUtilityHelper */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2BCF967F2F73397600DCDD2D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2B4A23452F6D8FBF00B3A320 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2B01BDA52F6DA04700067DE9;
+			remoteInfo = WifiUtilityHelper;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		2B01BDA42F6DA04700067DE9 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -16,12 +30,41 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		2BCF967A2F73390D00DCDD2D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "Contents​/​Library​/​Launch​Daemons";
+			dstSubfolderSpec = 1;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2BCF967D2F73393100DCDD2D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				2BCF967E2F73393C00DCDD2D /* WifiUtilityHelper in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2B01BDA62F6DA04700067DE9 /* WifiUtilityHelper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = WifiUtilityHelper; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B4A234D2F6D8FBF00B3A320 /* American Airlines Wifi Extender.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "American Airlines Wifi Extender.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		2BCF967C2F73392700DCDD2D /* Exceptions for "American Airlines Wifi Extender" folder in "Copy Files" phase from "American Airlines Wifi Extender" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 2BCF967A2F73390D00DCDD2D /* CopyFiles */;
+			membershipExceptions = (
+				LaunchDaemons/com.Finch13.WifiUtilityHelper.plist,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2B01BDA72F6DA04700067DE9 /* WifiUtilityHelper */ = {
@@ -31,6 +74,9 @@
 		};
 		2B4A234F2F6D8FBF00B3A320 /* American Airlines Wifi Extender */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2BCF967C2F73392700DCDD2D /* Exceptions for "American Airlines Wifi Extender" folder in "Copy Files" phase from "American Airlines Wifi Extender" target */,
+			);
 			path = "American Airlines Wifi Extender";
 			sourceTree = "<group>";
 		};
@@ -104,10 +150,13 @@
 				2B4A23492F6D8FBF00B3A320 /* Sources */,
 				2B4A234A2F6D8FBF00B3A320 /* Frameworks */,
 				2B4A234B2F6D8FBF00B3A320 /* Resources */,
+				2BCF967A2F73390D00DCDD2D /* CopyFiles */,
+				2BCF967D2F73393100DCDD2D /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				2BCF96802F73397600DCDD2D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				2B4A234F2F6D8FBF00B3A320 /* American Airlines Wifi Extender */,
@@ -183,6 +232,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2BCF96802F73397600DCDD2D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2B01BDA52F6DA04700067DE9 /* WifiUtilityHelper */;
+			targetProxy = 2BCF967F2F73397600DCDD2D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		2B01BDAA2F6DA04700067DE9 /* Debug */ = {

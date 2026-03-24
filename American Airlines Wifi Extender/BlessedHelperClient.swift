@@ -14,14 +14,11 @@ final class BlessedHelperClient {
     private let helperBundleID = "com.Finch13.WifiUtilityHelper"
     private let machServiceName = "com.Finch13.WifiUtilityHelper"
 
-    // Install/update the helper. macOS will prompt the user.
-    @available(macOS, deprecated: 13.0, message: "SMJobBless is deprecated; migrate to SMAppService when updating helper packaging.")
-    func blessIfNeeded() throws {
-        var cfError: Unmanaged<CFError>?
-        let ok = SMJobBless(kSMDomainSystemLaunchd, helperBundleID as CFString, nil, &cfError)
-        if !ok {
-            let error = (cfError?.takeRetainedValue()) as Error?
-            throw error ?? NSError(domain: "BlessError", code: 1, userInfo: [NSLocalizedDescriptionKey: "SMJobBless failed"])
+    // Register the launch daemon helper. macOS will prompt the user for approval.
+    func registerIfNeeded() throws {
+        let service = SMAppService.daemon(plistName: helperBundleID)
+        if service.status != .enabled {
+            try service.register()
         }
     }
 
