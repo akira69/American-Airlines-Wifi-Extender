@@ -10,7 +10,7 @@
         <true/>
     </dict>
     <key>BundleProgram</key>
-    <string>WifiUtilityHelper</string>
+    <string>Contents/Library/PrivilegedHelperTools/WifiUtilityHelper</string>
     <key>RunAtLoad</key>
     <true/>
 </dict>

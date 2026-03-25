@@ -16,7 +16,7 @@ final class BlessedHelperClient {
 
     // Register the launch daemon helper. macOS will prompt the user for approval.
     func registerIfNeeded() throws {
-        let service = SMAppService.daemon(plistName: helperBundleID)
+        let service = SMAppService.daemon(plistName: "\(helperBundleID).plist")
         if service.status != .enabled {
             try service.register()
         }

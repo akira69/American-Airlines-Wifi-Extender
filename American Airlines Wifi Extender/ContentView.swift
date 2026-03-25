@@ -3,6 +3,7 @@ import WebKit
 import Combine
 import UserNotifications
 import AppKit
+import CoreWLAN
 
 // MARK: - Menu Bar Notifications
 extension Notification.Name {
@@ -15,8 +16,9 @@ extension Notification.Name {
 struct ContentView: View {
     // Persistent settings
     @AppStorage("ssid") private var ssid: String = "aainflight.com"
-    @AppStorage("portalURLString") private var portalURLString: String = "https://example.com"
+    @AppStorage("portalURLString") private var portalURLString: String = "https://aainflight.com"
     @AppStorage("durationMinutes") private var durationMinutes: Int = 19
+    @State private var durationText: String = "19"
     @AppStorage("headsUpEnabled") private var headsUpEnabled: Bool = true
     @AppStorage("lastGeneratedMAC") private var lastGeneratedMAC: String = ""
 
@@ -33,80 +35,34 @@ struct ContentView: View {
     // UI state
     @State private var overlayEnabled: Bool = true
     @State private var showFinishedAlert: Bool = false
+    @State private var isEditingSSID: Bool = false
+    @State private var isEditingPortal: Bool = false
+    @State private var wifiPowerEnabled: Bool = true
+    @State private var currentWiFiStateLabel: String = "Wi-Fi Off"
 
     var body: some View {
         NavigationSplitView {
-            VStack {
-                Form {
-                    Section("Timer Settings") {
-                        Stepper(value: $durationMinutes, in: 1...180) {
-                            Text("Duration: \(durationMinutes) min")
-                        }
-                        Toggle("1‑minute warning", isOn: $headsUpEnabled)
-                        HStack {
-                            Button(isRunning ? "Pause" : "Start") { toggleTimer() }
-                            Button("Reset") { resetTimer() }
-                        }
-                        .buttonStyle(.borderedProminent)
-
-                        Text("Remaining: \(formattedRemaining)")
-                            .font(.title2).monospacedDigit()
-
-                        Toggle("Show overlay", isOn: $overlayEnabled)
-                    }
-
-                    Section("Connection Info (user-provided)") {
-                        TextField("SSID", text: $ssid)
-                        TextField("Portal URL", text: $portalURLString)
-                    }
-
-                    Section("Command Runner (user-driven)") {
-                        TextEditor(text: $commandInput)
-                            .frame(minHeight: 100)
-                            .font(.system(.body, design: .monospaced))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary))
-
-                        Button("Generate MAC command") {
-                            generateMACCommand()
-                        }
-                        .buttonStyle(.bordered)
-
-                        if !lastGeneratedMAC.isEmpty {
-                            Text("Last MAC: \(lastGeneratedMAC)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        
-                        HStack {
-                            Button("Prepare Disconnect Wi‑Fi") { prepareDisconnectWiFiCommand() }
-                            Button("Prepare Connect Wi‑Fi") { prepareConnectWiFiCommand() }
-                        }
-                        .buttonStyle(.bordered)
-
-                        HStack {
-                            Button("Run") { runUserCommand() }
-                            Button("Run as Admin") { runUserCommandAdmin() }
-                            Button("Copy Command") { copyCommandToClipboard() }
-                            Button("Clear") { commandInput = ""; commandOutput = "" }
-                        }
-                        .buttonStyle(.bordered)
-
-                        Text("Output:")
-                            .font(.headline)
-                        ScrollView {
-                            Text(commandOutput)
-                                .font(.system(.footnote, design: .monospaced))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(6)
-                        }
-                        .frame(minHeight: 120)
-                        .background(.regularMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    sidebarHero
+                    timerCard
+                    connectionCard
+                    commandRunnerCard
                 }
-                .navigationTitle("Wi‑Fi Utility")
+                .padding(16)
             }
-            .frame(minWidth: 360)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(nsColor: .windowBackgroundColor),
+                        Color(nsColor: .underPageBackgroundColor)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .navigationTitle("Wi‑Fi Utility")
+            .frame(minWidth: 380)
         } detail: {
             VStack(spacing: 0) {
                 HStack {
@@ -133,8 +89,28 @@ struct ContentView: View {
             .onAppear {
                 // Initialize timer with persisted duration
                 remaining = TimeInterval(durationMinutes * 60)
+                durationText = String(durationMinutes)
+                if portalURLString == "https://example.com" || portalURLString == "aainflight.com" {
+                    portalURLString = "https://aainflight.com"
+                }
+                refreshWiFiStatus()
                 setupMenuBar()
                 requestNotificationAuthorization()
+            }
+            .onChange(of: durationMinutes) { _, newValue in
+                durationText = String(newValue)
+            }
+            .onChange(of: durationText) { _, newValue in
+                let filtered = newValue.filter { $0.isNumber }
+                if filtered != newValue {
+                    durationText = filtered
+                }
+                guard let value = Int(filtered) else { return }
+                let clamped = min(max(value, 1), 180)
+                if clamped != durationMinutes {
+                    durationMinutes = clamped
+                    remaining = TimeInterval(clamped * 60)
+                }
             }
             .onChange(of: remaining) { _, newValue in
                 MenuBarController.shared.update(remaining: newValue, isRunning: isRunning)
@@ -152,6 +128,247 @@ struct ContentView: View {
                 Text("Your countdown has completed.")
             }
         }
+    }
+
+    private var sidebarHero: some View {
+        HStack(alignment: .top, spacing: 14) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("AA Wi-Fi Extender")
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                Text("Rotate MAC commands, reconnect quickly, and keep the portal close at hand.")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+
+            Image("BrandIcon")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 52, height: 52)
+                .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
+        }
+        .padding(16)
+        .background(
+            LinearGradient(
+                colors: [
+                    Color.accentColor.opacity(0.18),
+                    Color.red.opacity(0.12)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+        )
+    }
+
+    private var timerCard: some View {
+        SidebarCard(title: "Timer") {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Remaining")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.secondary)
+                        Text(formattedRemaining)
+                            .font(.system(size: 28, weight: .bold, design: .monospaced))
+                    }
+
+                    Spacer()
+
+                    VStack(alignment: .trailing, spacing: 8) {
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text("Duration")
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.secondary)
+                            TextField("", text: $durationText)
+                                .frame(width: 52)
+                                .multilineTextAlignment(.trailing)
+                                .textFieldStyle(.roundedBorder)
+                            Text("min")
+                                .font(.system(size: 13, weight: .medium, design: .rounded))
+                                .foregroundStyle(.secondary)
+                            Stepper("", value: $durationMinutes, in: 1...180)
+                                .labelsHidden()
+                        }
+
+                        HStack(spacing: 14) {
+                            Toggle("Warning", isOn: $headsUpEnabled)
+                                .toggleStyle(.checkbox)
+                            Toggle("Overlay", isOn: $overlayEnabled)
+                                .toggleStyle(.checkbox)
+                        }
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                    }
+                }
+
+                AdaptiveButtonRow(spacing: 10) {
+                    Button(isRunning ? "Pause" : "Start") { toggleTimer() }
+                    Button("Reset") { resetTimer() }
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+    }
+
+    private var connectionCard: some View {
+        SidebarCard(title: "Connection", accessory: {
+            HStack(spacing: 8) {
+                Text(currentWiFiStateLabel)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .frame(maxWidth: 120, alignment: .trailing)
+
+                Button {
+                    toggleWiFiCommand()
+                } label: {
+                    Image(systemName: wifiPowerEnabled ? "wifi" : "wifi.slash")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(wifiPowerEnabled ? Color.white : Color.primary)
+                        .frame(width: 32, height: 32)
+                        .background(
+                            wifiPowerEnabled ? Color.accentColor : Color(nsColor: .controlBackgroundColor),
+                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        )
+                }
+                .buttonStyle(.plain)
+                .help(wifiPowerEnabled ? "Prepare disconnect Wi-Fi command" : "Prepare connect Wi-Fi command")
+            }
+        }) {
+            HStack(alignment: .top, spacing: 12) {
+                editableConnectionRow(
+                    label: "SSID",
+                    value: $ssid,
+                    isEditing: $isEditingSSID,
+                    prompt: "SSID",
+                    help: "Edit SSID"
+                )
+
+                editableConnectionRow(
+                    label: "Portal",
+                    value: $portalURLString,
+                    isEditing: $isEditingPortal,
+                    prompt: "Portal URL",
+                    help: "Edit portal"
+                )
+            }
+        }
+    }
+
+    private var commandRunnerCard: some View {
+        SidebarCard(title: "Command Runner", accessory: {
+            HStack(spacing: 8) {
+                Image(systemName: "terminal")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                Button("Generate MAC") {
+                    generateMACCommand()
+                }
+                .buttonStyle(.borderless)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(Color.primary.opacity(0.05), in: Capsule())
+            }
+        }) {
+            VStack(alignment: .leading, spacing: 12) {
+                AdaptiveButtonRow(spacing: 10) {
+                    Button("Run") { runUserCommand() }
+                    Button("Run as Admin") { runUserCommandAdmin() }
+                    Button("Copy") { copyCommandToClipboard() }
+                    Button("Clear") { commandInput = ""; commandOutput = "" }
+                }
+                .buttonStyle(.bordered)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "terminal")
+                            .foregroundStyle(.secondary)
+                        Text(">_")
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                        Text("Command")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    TextEditor(text: $commandInput)
+                        .frame(minHeight: 72)
+                        .font(.system(.body, design: .monospaced))
+                        .padding(8)
+                        .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.primary.opacity(0.08))
+                        )
+                }
+
+                if !lastGeneratedMAC.isEmpty {
+                    Label(lastGeneratedMAC, systemImage: "network")
+                        .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Output")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.secondary)
+
+                    ScrollView {
+                        Text(commandOutput.isEmpty ? "Command output will appear here." : commandOutput)
+                            .font(.system(.footnote, design: .monospaced))
+                            .foregroundStyle(commandOutput.isEmpty ? .secondary : .primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(10)
+                    }
+                    .frame(minHeight: 108)
+                    .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func editableConnectionRow(
+        label: String,
+        value: Binding<String>,
+        isEditing: Binding<Bool>,
+        prompt: String,
+        help: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 8) {
+                if isEditing.wrappedValue {
+                    TextField(prompt, text: value)
+                        .textFieldStyle(.roundedBorder)
+                } else {
+                    Text(value.wrappedValue)
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 9)
+                        .foregroundStyle(.primary)
+                        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+
+                Button {
+                    isEditing.wrappedValue.toggle()
+                } label: {
+                    Image(systemName: "pencil")
+                        .frame(width: 30, height: 30)
+                }
+                .buttonStyle(.borderless)
+                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .help(help)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - WebView state
@@ -237,16 +454,10 @@ struct ContentView: View {
         guard !cmd.isEmpty else { return }
         commandOutput = ""
 
-        Task { @MainActor in
-            do {
-                try BlessedHelperClient.shared.registerIfNeeded()
-                BlessedHelperClient.shared.runCommand(cmd) { output in
-                    DispatchQueue.main.async {
-                        self.commandOutput = output
-                    }
-                }
-            } catch {
-                self.commandOutput = "Helper registration failed: \(error.localizedDescription)"
+        Task {
+            let result = await Shell.runAsAdmin(command: cmd)
+            await MainActor.run {
+                commandOutput = result
             }
         }
     }
@@ -272,12 +483,12 @@ struct ContentView: View {
     }
     
     private func prepareDisconnectWiFiCommand() {
-        commandInput = "networksetup -setairportpower en0 off"
+        commandInput = "/bin/zsh -lc 'iface=$(networksetup -listallhardwareports | awk \"/Wi-Fi/{getline; print \\$NF}\"); if [ -z \"$iface\" ]; then echo \"Wi-Fi interface not found\" >&2; exit 1; fi; networksetup -setairportpower \"$iface\" off'"
     }
 
     private func prepareConnectWiFiCommand() {
         let escapedSSID = ssid.replacingOccurrences(of: "\"", with: "\\\"")
-        commandInput = "networksetup -setairportpower en0 on; networksetup -setairportnetwork en0 \"\(escapedSSID)\""
+        commandInput = "/bin/zsh -lc 'iface=$(networksetup -listallhardwareports | awk \"/Wi-Fi/{getline; print \\$NF}\"); if [ -z \"$iface\" ]; then echo \"Wi-Fi interface not found\" >&2; exit 1; fi; networksetup -setairportpower \"$iface\" on; networksetup -setairportnetwork \"$iface\" \"\(escapedSSID)\"'"
     }
 
     private func copyCommandToClipboard() {
@@ -286,6 +497,25 @@ struct ContentView: View {
         pb.clearContents()
         pb.setString(commandInput, forType: .string)
         #endif
+    }
+
+    private func toggleWiFiCommand() {
+        if wifiPowerEnabled {
+            prepareDisconnectWiFiCommand()
+        } else {
+            prepareConnectWiFiCommand()
+        }
+        wifiPowerEnabled.toggle()
+    }
+
+    private func refreshWiFiStatus() {
+        if let interface = CWWiFiClient.shared().interface() {
+            wifiPowerEnabled = interface.powerOn()
+            currentWiFiStateLabel = interface.powerOn() ? "Wi-Fi On" : "Wi-Fi Off"
+        } else {
+            wifiPowerEnabled = false
+            currentWiFiStateLabel = "Wi-Fi Off"
+        }
     }
 
     // MARK: - Menu Bar setup
@@ -303,6 +533,113 @@ struct ContentView: View {
             }
         )
         MenuBarController.shared.update(remaining: remaining, isRunning: isRunning)
+    }
+}
+
+private struct SidebarCard<Content: View, Accessory: View>: View {
+    let title: String
+    let accessory: Accessory
+    @ViewBuilder let content: Content
+
+    init(title: String, @ViewBuilder content: () -> Content) where Accessory == EmptyView {
+        self.title = title
+        self.accessory = EmptyView()
+        self.content = content()
+    }
+
+    init(title: String, @ViewBuilder accessory: () -> Accessory, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.accessory = accessory()
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .center, spacing: 12) {
+                Text(title)
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                Spacer()
+                accessory
+            }
+
+            content
+        }
+        .padding(18)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(Color.black.opacity(0.06))
+        )
+    }
+}
+
+// MARK: - Adaptive wrapping button row
+private struct AdaptiveButtonRow<Content: View>: View {
+    let spacing: CGFloat
+    @ViewBuilder let content: Content
+
+    init(spacing: CGFloat = 8, @ViewBuilder content: () -> Content) {
+        self.spacing = spacing
+        self.content = content()
+    }
+
+    var body: some View {
+        FlowLayout(spacing: spacing) {
+            content
+        }
+    }
+}
+
+private struct FlowLayout: Layout {
+    let spacing: CGFloat
+
+    init(spacing: CGFloat = 8) {
+        self.spacing = spacing
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var width: CGFloat = 0
+        var height: CGFloat = 0
+        var rowWidth: CGFloat = 0
+        var rowHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if rowWidth + size.width > maxWidth, rowWidth > 0 {
+                width = max(width, rowWidth - spacing)
+                height += rowHeight + spacing
+                rowWidth = 0
+                rowHeight = 0
+            }
+            rowWidth += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+
+        if rowWidth > 0 {
+            width = max(width, rowWidth - spacing)
+            height += rowHeight
+        }
+
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX
+        var y = bounds.minY
+        var rowHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x + size.width > bounds.maxX, x > bounds.minX {
+                x = bounds.minX
+                y += rowHeight + spacing
+                rowHeight = 0
+            }
+            subview.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
     }
 }
 
@@ -463,6 +800,52 @@ enum Shell {
                 continuation.resume(returning: output)
             }
         }
+    }
+
+    static func runAsAdmin(command: String) async -> String {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let task = Process()
+                task.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+                task.arguments = [
+                    "-e",
+                    "do shell script " + appleScriptString(for: command) + " with administrator privileges"
+                ]
+
+                let outPipe = Pipe()
+                let errPipe = Pipe()
+                task.standardOutput = outPipe
+                task.standardError = errPipe
+
+                do {
+                    try task.run()
+                } catch {
+                    continuation.resume(returning: "Failed to run admin command: \(error.localizedDescription)")
+                    return
+                }
+
+                let outData = outPipe.fileHandleForReading.readDataToEndOfFile()
+                let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
+                task.waitUntilExit()
+
+                let outString = String(data: outData, encoding: .utf8) ?? ""
+                let errString = String(data: errData, encoding: .utf8) ?? ""
+                let output = outString + errString
+
+                if output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    continuation.resume(returning: task.terminationStatus == 0 ? "Command completed." : "Admin command failed.")
+                } else {
+                    continuation.resume(returning: output)
+                }
+            }
+        }
+    }
+
+    private static func appleScriptString(for command: String) -> String {
+        let escaped = command
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+        return "\"\(escaped)\""
     }
 }
 
