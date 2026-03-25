@@ -1,4 +1,4 @@
-# AA Wi-Fi Extender
+# American Airlines Wi-Fi Extender
 
 AA Wi-Fi Extender is a macOS utility for quickly cycling Wi-Fi state and generating a randomized MAC address command while testing captive-portal style flows such as `aainflight.com`.
 
@@ -26,7 +26,7 @@ AA Wi-Fi Extender is a macOS utility for quickly cycling Wi-Fi state and generat
 - macOS
 - Xcode
 
-This project is currently set up as an Xcode project, not a Swift Package.
+This project is currently set up as an Xcode project, not a Swift Package.  Will be a full app eventually.
 
 ## Open and run
 
