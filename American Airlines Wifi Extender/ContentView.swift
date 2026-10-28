@@ -5,13 +5,6 @@ import UserNotifications
 import AppKit
 import CoreWLAN
 
-// MARK: - Menu Bar Notifications
-extension Notification.Name {
-    static let menuBarStartPause = Notification.Name("MenuBarStartPause")
-    static let menuBarReset = Notification.Name("MenuBarReset")
-    static let menuBarOpenPortal = Notification.Name("MenuBarOpenPortal")
-}
-
 // MARK: - ContentView
 struct ContentView: View {
     // Persistent settings
@@ -99,6 +92,9 @@ struct ContentView: View {
             }
             .onChange(of: durationMinutes) { _, newValue in
                 durationText = String(newValue)
+                if !isRunning {
+                    remaining = TimeInterval(newValue * 60)
+                }
             }
             .onChange(of: durationText) { _, newValue in
                 let filtered = newValue.filter { $0.isNumber }
@@ -392,9 +388,10 @@ struct ContentView: View {
         headsUpSent = false
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            if remaining > 0 {
+            if remaining > 1 {
                 remaining -= 1
             } else {
+                remaining = 0
                 pauseTimer()
                 showFinishedAlert = true
                 sendTimerFinishedNotification()
@@ -522,15 +519,9 @@ struct ContentView: View {
     private func setupMenuBar() {
         MenuBarController.shared.configureMenu(
             startPauseTitle: isRunning ? "Pause" : "Start",
-            onStartPause: {
-                NotificationCenter.default.post(name: .menuBarStartPause, object: nil)
-            },
-            onReset: {
-                NotificationCenter.default.post(name: .menuBarReset, object: nil)
-            },
-            onOpenPortal: {
-                NotificationCenter.default.post(name: .menuBarOpenPortal, object: nil)
-            }
+            onStartPause: { toggleTimer() },
+            onReset: { resetTimer() },
+            onOpenPortal: { webPage.load(urlString: portalURLString) }
         )
         MenuBarController.shared.update(remaining: remaining, isRunning: isRunning)
     }
@@ -734,11 +725,6 @@ final class MenuBarController: NSObject {
         self.onReset = onReset
         self.onOpenPortal = onOpenPortal
         startPauseItem.title = startPauseTitle
-
-        // Wire up notifications to decouple from view
-        NotificationCenter.default.addObserver(self, selector: #selector(handleMenuNotification(_:)), name: .menuBarStartPause, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(handleMenuNotification(_:)), name: .menuBarReset, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(handleMenuNotification(_:)), name: .menuBarOpenPortal, object: nil)
     }
 
     func update(remaining: TimeInterval, isRunning: Bool) {
@@ -753,15 +739,6 @@ final class MenuBarController: NSObject {
     @objc private func startPauseAction() { onStartPause?() }
     @objc private func resetAction() { onReset?() }
     @objc private func openPortalAction() { onOpenPortal?() }
-
-    @objc private func handleMenuNotification(_ note: Notification) {
-        switch note.name {
-        case .menuBarStartPause: onStartPause?()
-        case .menuBarReset: onReset?()
-        case .menuBarOpenPortal: onOpenPortal?()
-        default: break
-        }
-    }
 }
 
 // MARK: - Shell execution (user-driven)
